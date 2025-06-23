@@ -29,7 +29,7 @@ jobs:
         run: terraform -chdir=terraform/environments/${{ github.event.inputs.environment }} plan -out=tfplan.out
 
       - name: Upload Plan Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tfplan-${{ github.event.inputs.environment }}
           path: terraform/environments/${{ github.event.inputs.environment }}/tfplan.out
@@ -55,7 +55,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Download Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v3
         with:
           name: tfplan-${{ github.event.inputs.environment }}
           path: terraform/environments/${{ github.event.inputs.environment }}
