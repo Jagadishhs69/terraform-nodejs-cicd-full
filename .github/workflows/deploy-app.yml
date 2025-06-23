@@ -17,8 +17,8 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t yourdockerhub/nodeapp:${{ github.sha }} .
-          docker push yourdockerhub/nodeapp:${{ github.sha }}
+          docker build -t jagadishhs99/nodeapp:${{ github.sha }} .
+          docker push jagadishhs99/nodeapp:${{ github.sha }}
 
       - name: SSH into EC2 and Deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -27,7 +27,7 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
-            docker pull yourdockerhub/nodeapp:${{ github.sha }}
+            docker pull jagadishhs99/nodeapp:${{ github.sha }}
             docker stop nodeapp || true
             docker rm nodeapp || true
-            docker run -d -p 80:3000 --name nodeapp yourdockerhub/nodeapp:${{ github.sha }}
+            docker run -d -p 80:3000 --name nodeapp jagadishhs99/nodeapp:${{ github.sha }}
