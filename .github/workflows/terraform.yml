@@ -1,0 +1,64 @@
+name: Terraform Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy"
+        required: true
+        default: "dev"
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        run: terraform -chdir=terraform/environments/${{ github.event.inputs.environment }} init
+
+      - name: Terraform Plan
+        run: terraform -chdir=terraform/environments/${{ github.event.inputs.environment }} plan -out=tfplan.out
+
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: tfplan-${{ github.event.inputs.environment }}
+          path: terraform/environments/${{ github.event.inputs.environment }}/tfplan.out
+
+  terraform-apply:
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment }}
+      url: https://aws.amazon.com
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Wait for Approval
+        uses: hmarr/auto-approve-action@v3
+        if: github.ref == 'refs/heads/main'
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: tfplan-${{ github.event.inputs.environment }}
+          path: terraform/environments/${{ github.event.inputs.environment }}
+
+      - name: Terraform Apply
+        run: terraform -chdir=terraform/environments/${{ github.event.inputs.environment }} apply tfplan.out
